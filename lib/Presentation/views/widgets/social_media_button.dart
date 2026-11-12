@@ -20,29 +20,58 @@ class SocialMediaButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.grey2),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.surfaceCardDark : AppColors.surfaceCard;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final textColor = isDark ? AppColors.textDark : AppColors.black;
+
+    return Material(
+      color: cardBg,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: borderColor),
+            borderRadius: BorderRadius.circular(14),
+          ),
           child:
               isLoading
-                  ? const CircularProgressIndicator.adaptive()
+                  ? const Center(
+                    child: SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator.adaptive(
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  )
                   : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       CachedNetworkImage(
                         imageUrl: imgUrl!,
-                        width: 25,
-                        height: 25,
-                        fit: BoxFit.fill,
+                        width: 22,
+                        height: 22,
+                        fit: BoxFit.contain,
+                        errorWidget:
+                            (_, __, ___) => Icon(
+                              Icons.login_rounded,
+                              size: 20,
+                              color: isDark ? AppColors.accentColor : AppColors.primaryColor,
+                            ),
                       ),
-                      const SizedBox(width: 16),
-                      Text(text!),
+                      const SizedBox(width: 12),
+                      Text(
+                        text!,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
+                      ),
                     ],
                   ),
         ),

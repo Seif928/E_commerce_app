@@ -33,3 +33,13 @@ final class CheckoutError extends CheckoutState {
     this.message,
   );
 }
+
+final class CheckoutPlacingOrder extends CheckoutState {}
+
+final class CheckoutOrderPlaced extends CheckoutState {}
+
+final class CheckoutOrderError extends CheckoutState {
+  final String message;
+
+  CheckoutOrderError(this.message);
+}

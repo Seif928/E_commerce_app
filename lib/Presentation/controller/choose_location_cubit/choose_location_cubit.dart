@@ -25,20 +25,30 @@ class ChooseLocationCubit extends Cubit<ChooseLocationState> {
     emit(FetchingLocations());
     try {
       final currentUserId = _authRepository.currentUserId;
-      final locations = await _locationRepository.fetchLocations(
-        currentUserId!,
-      );
-      for (var location in locations) {
+      if (currentUserId == null) {
+        emit(FetchLocationsFailure('User is not logged in'));
+        return;
+      }
+      final locations = await _locationRepository.fetchLocations(currentUserId);
+      selectedLocationId = null;
+      selectedLocation = null;
+      for (final location in locations) {
         if (location.isChosen) {
           selectedLocationId = location.id;
           selectedLocation = location;
         }
       }
-      selectedLocationId ??= locations.first.id;
-      selectedLocation ??= locations.first;
+      if (locations.isNotEmpty) {
+        selectedLocationId ??= locations.first.id;
+        selectedLocation ??= locations.first;
+      }
+      if (isClosed) return;
       emit(FetchedLocations(locations));
-      emit(LocationChosen(selectedLocation!));
+      if (selectedLocation != null) {
+        emit(LocationChosen(selectedLocation!));
+      }
     } catch (e) {
+      if (isClosed) return;
       emit(FetchLocationsFailure(e.toString()));
     }
   }
@@ -46,50 +56,111 @@ class ChooseLocationCubit extends Cubit<ChooseLocationState> {
   Future<void> addLocation(String location) async {
     emit(AddingLocation());
     try {
-      final splittedLocations = location.split('-');
-      final locationItem = Location(
-        id: DateTime.now().toIso8601String(),
-        city: splittedLocations[0],
-        country: splittedLocations[1],
-      );
       final currentUserId = _authRepository.currentUserId;
-      await _locationRepository.setLocation(locationItem, currentUserId!);
+      if (currentUserId == null) {
+        emit(LocationAddingFailure('User is not logged in'));
+        return;
+      }
+      final separator = location.contains('-') ? '-' : ',';
+      final splittedLocations = location.split(separator);
+      if (splittedLocations.length < 2 ||
+          splittedLocations[0].trim().isEmpty ||
+          splittedLocations[1].trim().isEmpty) {
+        emit(
+          LocationAddingFailure(
+            'Please enter location in format: City-Country',
+          ),
+        );
+        return;
+      }
+      final existing = await _locationRepository.fetchLocations(currentUserId);
+      final locationItem = Location(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        city: splittedLocations[0].trim(),
+        country: splittedLocations[1].trim(),
+        isChosen: existing.isEmpty,
+      );
+      await _locationRepository.setLocation(locationItem, currentUserId);
+      if (isClosed) return;
       emit(LocationAdded());
       final locations = await _locationRepository.fetchLocations(currentUserId);
+      selectedLocationId ??= locationItem.id;
+      selectedLocation ??= locationItem;
+      if (isClosed) return;
       emit(FetchedLocations(locations));
+      emit(LocationChosen(selectedLocation!));
     } catch (e) {
+      if (isClosed) return;
       emit(LocationAddingFailure(e.toString()));
     }
   }
 
   Future<void> selectLocation(String id) async {
-    selectedLocationId = id;
-    final currentUserId = _authRepository.currentUserId;
-    final chosenLocation = await _locationRepository.fetchLocation(
-      currentUserId!,
-      id,
-    );
-    selectedLocation = chosenLocation;
-    emit(LocationChosen(chosenLocation));
+    try {
+      final currentUserId = _authRepository.currentUserId;
+      if (currentUserId == null) {
+        emit(ConfirmAddressFailure('User is not logged in'));
+        return;
+      }
+      selectedLocationId = id;
+      final chosenLocation = await _locationRepository.fetchLocation(
+        currentUserId,
+        id,
+      );
+      selectedLocation = chosenLocation;
+      if (isClosed) return;
+      emit(LocationChosen(chosenLocation));
+    } catch (e) {
+      if (isClosed) return;
+      emit(ConfirmAddressFailure(e.toString()));
+    }
+  }
+
+  Future<void> deleteLocation(String id) async {
+    try {
+      final currentUserId = _authRepository.currentUserId;
+      if (currentUserId == null) {
+        emit(FetchLocationsFailure('User is not logged in'));
+        return;
+      }
+      await _locationRepository.deleteLocation(currentUserId, id);
+      await fetchLocations();
+    } catch (e) {
+      if (isClosed) return;
+      emit(FetchLocationsFailure(e.toString()));
+    }
   }
 
   Future<void> confirmAddress() async {
+    if (selectedLocation == null) {
+      emit(ConfirmAddressFailure('Please add or select a location first'));
+      return;
+    }
     emit(ConfirmAddressLoading());
     try {
       final currentUserId = _authRepository.currentUserId;
-      var previousChosenLocations = await _locationRepository.fetchLocations(
-        currentUserId!,
+      if (currentUserId == null) {
+        emit(ConfirmAddressFailure('User is not logged in'));
+        return;
+      }
+      final previousChosenLocations = await _locationRepository.fetchLocations(
+        currentUserId,
         chosen: true,
       );
-      if (previousChosenLocations.isNotEmpty) {
-        var previousLocation = previousChosenLocations.first;
-        previousLocation = previousLocation.copyWith(isChosen: false);
-        await _locationRepository.setLocation(previousLocation, currentUserId);
+      for (final previousLocation in previousChosenLocations) {
+        if (previousLocation.id != selectedLocation!.id) {
+          await _locationRepository.setLocation(
+            previousLocation.copyWith(isChosen: false),
+            currentUserId,
+          );
+        }
       }
       selectedLocation = selectedLocation!.copyWith(isChosen: true);
       await _locationRepository.setLocation(selectedLocation!, currentUserId);
+      if (isClosed) return;
       emit(ConfirmAddressLoaded());
     } catch (e) {
+      if (isClosed) return;
       emit(ConfirmAddressFailure(e.toString()));
     }
   }

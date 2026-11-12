@@ -1,15 +1,14 @@
   import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id("com.android.application")
-
+    id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
-    id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 dependencies {
   // Import the Firebase BoM
-  implementation(platform("com.google.firebase:firebase-bom:34.15.0"))
+  implementation(platform("com.google.firebase:firebase-bom:34.19.0"))
 
 
   // TODO: Add the dependencies for Firebase products you want to use
@@ -26,11 +25,11 @@ android {
 
     compileSdk = 36
 
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "28.2.13676358"
 
     defaultConfig {
         applicationId = "com.example.e_commerc_app"
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -40,17 +39,16 @@ android {
     }
 
     compileOptions {
-         isCoreLibraryDesugaringEnabled = true
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-
+}
 
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }
-}
 }
 
 

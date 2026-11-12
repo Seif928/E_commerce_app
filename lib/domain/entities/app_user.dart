@@ -5,6 +5,7 @@ class AppUser {
   final String password;
   final String createdAt;
   final String providerId;
+  final String photoUrl;
 
   const AppUser({
     required this.id,
@@ -13,5 +14,6 @@ class AppUser {
     required this.email,
     required this.createdAt,
     this.providerId = 'password',
+    this.photoUrl = '',
   });
 }

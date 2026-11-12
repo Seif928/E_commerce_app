@@ -46,8 +46,10 @@ class FirestoreServices {
       final result =
           snapshot.docs
               .map(
-                (snapshot) =>
-                    builder(snapshot.data() as Map<String, dynamic>, snapshot.id),
+                (snapshot) => builder(
+                  snapshot.data() as Map<String, dynamic>,
+                  snapshot.id,
+                ),
               )
               .where((value) => value != null)
               .toList();
@@ -75,7 +77,11 @@ class FirestoreServices {
   }) async {
     final reference = firestore.doc(path);
     final snapshot = await reference.get();
-    return builder(snapshot.data() as Map<String, dynamic>, snapshot.id);
+    final data = snapshot.data();
+    if (!snapshot.exists || data == null) {
+      throw Exception('Document not found at $path');
+    }
+    return builder(data, snapshot.id);
   }
 
   // One Time Request for a list of documents

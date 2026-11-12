@@ -21,10 +21,15 @@ class CartCubit extends Cubit<CartState> {
     emit(CartLoading());
     try {
       final currentUserId = _authRepository.currentUserId;
-      final cartItems = await _cartRepository.fetchCartItems(currentUserId!);
-
+      if (currentUserId == null) {
+        emit(CartError('User is not logged in'));
+        return;
+      }
+      final cartItems = await _cartRepository.fetchCartItems(currentUserId);
+      if (isClosed) return;
       emit(CartLoaded(cartItems, _subtotal(cartItems)));
     } catch (e) {
+      if (isClosed) return;
       emit(CartError(e.toString()));
     }
   }
@@ -32,25 +37,36 @@ class CartCubit extends Cubit<CartState> {
   Future<void> removeCartItem(String cartItem) async {
     try {
       final currentUserId = _authRepository.currentUserId;
-      await _cartRepository.removeCartItem(currentUserId!, cartItem);
+      if (currentUserId == null) {
+        emit(CartError('User is not logged in'));
+        return;
+      }
+      await _cartRepository.removeCartItem(currentUserId, cartItem);
       final cartItems = await _cartRepository.fetchCartItems(currentUserId);
+      if (isClosed) return;
       emit(CartLoaded(cartItems, _subtotal(cartItems)));
     } catch (e) {
+      if (isClosed) return;
       emit(CartError(e.toString()));
     }
   }
 
   Future<void> incrementCounter(CartItem cartItem) async {
     try {
+      final currentUserId = _authRepository.currentUserId;
+      if (currentUserId == null) {
+        emit(CartError('User is not logged in'));
+        return;
+      }
       final updatedCartItem = cartItem.copyWith(
         quantity: cartItem.quantity + 1,
       );
-      final currentUserId = _authRepository.currentUserId;
-
-      await _cartRepository.setCartItem(currentUserId!, updatedCartItem);
+      await _cartRepository.setCartItem(currentUserId, updatedCartItem);
       final cartItems = await _cartRepository.fetchCartItems(currentUserId);
+      if (isClosed) return;
       emit(CartLoaded(cartItems, _subtotal(cartItems)));
     } catch (e) {
+      if (isClosed) return;
       emit(CartError(e.toString()));
     }
   }
@@ -58,15 +74,20 @@ class CartCubit extends Cubit<CartState> {
   Future<void> decrementCounter(CartItem cartItem) async {
     if (cartItem.quantity <= 1) return;
     try {
+      final currentUserId = _authRepository.currentUserId;
+      if (currentUserId == null) {
+        emit(CartError('User is not logged in'));
+        return;
+      }
       final updatedCartItem = cartItem.copyWith(
         quantity: cartItem.quantity - 1,
       );
-      final currentUserId = _authRepository.currentUserId;
-
-      await _cartRepository.setCartItem(currentUserId!, updatedCartItem);
+      await _cartRepository.setCartItem(currentUserId, updatedCartItem);
       final cartItems = await _cartRepository.fetchCartItems(currentUserId);
+      if (isClosed) return;
       emit(CartLoaded(cartItems, _subtotal(cartItems)));
     } catch (e) {
+      if (isClosed) return;
       emit(CartError(e.toString()));
     }
   }

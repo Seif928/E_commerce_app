@@ -15,29 +15,39 @@ class CounterWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final softBg = isDark ? AppColors.surfaceSoftDark : AppColors.surfaceSoft;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+
+    return Container(
       decoration: BoxDecoration(
-        color: AppColors.grey2,
-        borderRadius: const BorderRadius.all(Radius.circular(30)),
+        color: softBg,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: borderColor),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Row(
-          children: [
-            IconButton(
-              onPressed: onDecrement,
-              icon: const Icon(Icons.remove),
-            ),
-            Text(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            onPressed: onDecrement,
+            icon: const Icon(Icons.remove, size: 18),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Text(
               value.toString(),
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.w700),
             ),
-            IconButton(
-              onPressed: onIncrement,
-              icon: const Icon(Icons.add),
-            ),
-          ],
-        ),
+          ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            onPressed: onIncrement,
+            icon: const Icon(Icons.add, size: 18),
+          ),
+        ],
       ),
     );
   }

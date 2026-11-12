@@ -112,4 +112,14 @@ class AuthCubit extends Cubit<AuthState> {
       emit(FacebookAuthError(e.toString()));
     }
   }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    emit(const PasswordResetLoading());
+    try {
+      await _authRepository.sendPasswordResetEmail(email);
+      emit(const PasswordResetSuccess());
+    } catch (e) {
+      emit(PasswordResetError(e.toString()));
+    }
+  }
 }

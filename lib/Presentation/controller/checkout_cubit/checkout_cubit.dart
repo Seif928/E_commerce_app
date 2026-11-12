@@ -9,6 +9,7 @@ import 'package:e_commerce_app/domain/repositories/auth_repository.dart';
 import 'package:e_commerce_app/domain/repositories/cart_repository.dart';
 import 'package:e_commerce_app/domain/repositories/checkout_repository.dart';
 import 'package:e_commerce_app/domain/repositories/location_repository.dart';
+import 'package:e_commerce_app/services/notification_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'checkout_state.dart';
@@ -34,8 +35,12 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     emit(CheckoutLoading());
     try {
       final currentUserId = _authRepository.currentUserId;
-      final cartItems = await _cartRepository.fetchCartItems(currentUserId!);
-      double shippingValue = 10;
+      if (currentUserId == null) {
+        emit(CheckoutError('User is not logged in'));
+        return;
+      }
+      final cartItems = await _cartRepository.fetchCartItems(currentUserId);
+      final double shippingValue = cartItems.isEmpty ? 0 : 10;
       final subtotal = cartItems.fold(
         0.0,
         (previousValue, element) =>
@@ -46,16 +51,35 @@ class CheckoutCubit extends Cubit<CheckoutState> {
         (previousValue, element) => previousValue + element.quantity,
       );
 
-      final chosenPaymentCard = (await _checkoutRepository.fetchPaymentMethods(
+      final paymentCards = await _checkoutRepository.fetchPaymentMethods(
         currentUserId,
-      )).first;
+      );
+      PaymentCard? chosenPaymentCard;
+      for (final card in paymentCards) {
+        if (card.isChosen) {
+          chosenPaymentCard = card;
+          break;
+        }
+      }
+      chosenPaymentCard ??=
+          paymentCards.isNotEmpty ? paymentCards.first : null;
 
-      final locations = await _locationRepository.fetchLocations(
+      final chosenLocations = await _locationRepository.fetchLocations(
         currentUserId,
         chosen: true,
       );
-      final chosenAddress = locations.isNotEmpty ? locations.first : null;
+      Location? chosenAddress =
+          chosenLocations.isNotEmpty ? chosenLocations.first : null;
+      if (chosenAddress == null) {
+        final allLocations = await _locationRepository.fetchLocations(
+          currentUserId,
+        );
+        if (allLocations.isNotEmpty) {
+          chosenAddress = allLocations.first;
+        }
+      }
 
+      if (isClosed) return;
       emit(
         CheckoutLoaded(
           cartItems: cartItems,
@@ -68,7 +92,63 @@ class CheckoutCubit extends Cubit<CheckoutState> {
         ),
       );
     } catch (e) {
+      if (isClosed) return;
       emit(CheckoutError(e.toString()));
+    }
+  }
+
+  Future<void> placeOrder({bool isCashOnDelivery = false}) async {
+    final currentState = state;
+    if (currentState is! CheckoutLoaded) return;
+    if (currentState.cartItems.isEmpty) {
+      emit(CheckoutOrderError('Your cart is empty'));
+      emit(currentState);
+      return;
+    }
+    if (currentState.chosenAddress == null) {
+      emit(CheckoutOrderError('Please select a shipping address'));
+      emit(currentState);
+      return;
+    }
+    if (!isCashOnDelivery && currentState.chosenPaymentCard == null) {
+      emit(
+        CheckoutOrderError(
+          'Please select a payment card or choose Cash on Delivery',
+        ),
+      );
+      emit(currentState);
+      return;
+    }
+
+    emit(CheckoutPlacingOrder());
+    try {
+      final currentUserId = _authRepository.currentUserId;
+      if (currentUserId == null) {
+        emit(CheckoutOrderError('User is not logged in'));
+        emit(currentState);
+        return;
+      }
+      await _checkoutRepository.placeOrder(
+        userId: currentUserId,
+        items: currentState.cartItems,
+        subtotal: currentState.subtotal,
+        shipping: currentState.shippingValue,
+        totalAmount: currentState.totalAmount,
+        address: currentState.chosenAddress!,
+        paymentCard: currentState.chosenPaymentCard,
+        isCashOnDelivery: isCashOnDelivery,
+      );
+      final generatedOrderId = DateTime.now().millisecondsSinceEpoch.toString();
+      await NotificationService.instance.showOrderPlacedNotification(
+        orderId: generatedOrderId,
+        totalAmount: currentState.totalAmount,
+      );
+      if (isClosed) return;
+      emit(CheckoutOrderPlaced());
+    } catch (e) {
+      if (isClosed) return;
+      emit(CheckoutOrderError(e.toString()));
+      emit(currentState);
     }
   }
 }

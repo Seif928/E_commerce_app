@@ -28,8 +28,10 @@ class ProductDetailsCubit extends Cubit<ProductDetailsState> {
     try {
       final selectedProduct = await _productDetailsRepository
           .fetchProductDetails(id);
+      if (isClosed) return;
       emit(ProductDetailsLoaded(product: selectedProduct));
     } catch (e) {
+      if (isClosed) return;
       emit(ProductDetailsError(e.toString()));
     }
   }
@@ -40,21 +42,30 @@ class ProductDetailsCubit extends Cubit<ProductDetailsState> {
   }
 
   Future<void> addToCart(String productId) async {
+    if (selectedSize == null) {
+      emit(ProductAddToCartError('Please select a size'));
+      return;
+    }
+    final currentUserId = _authRepository.currentUserId;
+    if (currentUserId == null) {
+      emit(ProductAddToCartError('User is not logged in'));
+      return;
+    }
     emit(ProductAddingToCart());
     try {
       final selectedProduct = await _productDetailsRepository
           .fetchProductDetails(productId);
-      final currentUserId = _authRepository.currentUserId;
-
       final cartItem = CartItem(
-        id: DateTime.now().toIso8601String(),
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
         product: selectedProduct,
         size: selectedSize!,
         quantity: quantity,
       );
-      await _productDetailsRepository.addToCart(cartItem, currentUserId!);
+      await _productDetailsRepository.addToCart(cartItem, currentUserId);
+      if (isClosed) return;
       emit(ProductAddedToCart(productId: productId));
     } catch (e) {
+      if (isClosed) return;
       emit(ProductAddToCartError(e.toString()));
     }
   }

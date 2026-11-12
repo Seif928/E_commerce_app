@@ -25,14 +25,12 @@ class AuthRepositoryImpl implements AuthRepository {
   ) async {
     try {
       final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
-        email: email,
+        email: email.trim(),
         password: password,
       );
       return userCredential.user != null;
-    } on FirebaseAuthException {
-      return false;
-    } catch (e) {
-      return false;
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.message ?? 'Login failed (${e.code})');
     }
   }
 
@@ -43,14 +41,31 @@ class AuthRepositoryImpl implements AuthRepository {
   ) async {
     try {
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
+        email: email.trim(),
         password: password,
       );
       return userCredential.user != null;
-    } on FirebaseAuthException {
-      return false;
-    } catch (e) {
-      return false;
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.message ?? 'Registration failed (${e.code})');
+    }
+  }
+
+  Future<void> _ensureSocialUserDocument(User? user) async {
+    if (user == null) return;
+    final doc =
+        await FirestoreServices.instance.firestore
+            .doc(ApiPaths.user(user.uid))
+            .get();
+    if (!doc.exists || doc.data() == null) {
+      await saveUserData(
+        AppUser(
+          id: user.uid,
+          password: '',
+          username: user.displayName ?? user.email?.split('@').first ?? 'User',
+          email: user.email ?? '',
+          createdAt: DateTime.now().toIso8601String(),
+        ),
+      );
     }
   }
 
@@ -76,13 +91,12 @@ class AuthRepositoryImpl implements AuthRepository {
       final userCredential = await _firebaseAuth.signInWithCredential(
         credential,
       );
+      await _ensureSocialUserDocument(userCredential.user);
       return userCredential.user != null;
-    } on GoogleSignInException {
-      return false;
-    } on FirebaseAuthException {
-      return false;
-    } catch (e) {
-      return false;
+    } on GoogleSignInException catch (e) {
+      throw Exception(e.description ?? 'Google sign-in cancelled or failed');
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.message ?? 'Google authentication failed (${e.code})');
     }
   }
 
@@ -91,12 +105,14 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final loginResult = await FacebookAuth.instance.login();
       if (loginResult.status != LoginStatus.success) {
-        return false;
+        throw Exception(
+          loginResult.message ?? 'Facebook authentication cancelled or failed',
+        );
       }
 
       final accessToken = loginResult.accessToken;
       if (accessToken == null) {
-        return false;
+        throw Exception('Facebook access token is missing');
       }
 
       final credential = FacebookAuthProvider.credential(
@@ -105,11 +121,19 @@ class AuthRepositoryImpl implements AuthRepository {
       final userCredential = await _firebaseAuth.signInWithCredential(
         credential,
       );
+      await _ensureSocialUserDocument(userCredential.user);
       return userCredential.user != null;
-    } on FirebaseAuthException {
-      return false;
-    } catch (e) {
-      return false;
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.message ?? 'Facebook authentication failed (${e.code})');
+    }
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.message ?? 'Failed to send reset email (${e.code})');
     }
   }
 

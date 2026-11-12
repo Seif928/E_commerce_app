@@ -4,6 +4,7 @@ class AppRoute {
   static const String productDetailsRoute = '/product-details';
   static const String cartRoute = '/cart-page';
   static const String checkoutRoute = '/payment';
+  static const String paymentMethodsRoute = '/payment-methods';
   static const String profileRoute = '/profile';
   static const String addNewCardRoute = '/add-new-card';
   static const String chooseLocation = '/choose-location';

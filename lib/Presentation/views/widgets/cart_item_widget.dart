@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:e_commerce_app/Presentation/controller/cart_cubit/cart_cubit.dart';
 import 'package:e_commerce_app/Presentation/views/widgets/counter_widget.dart';
+import 'package:e_commerce_app/core/localization/app_localizations.dart';
 import 'package:e_commerce_app/core/utils/app_colors.dart';
 import 'package:e_commerce_app/domain/entities/cart_item.dart';
 import 'package:flutter/material.dart';
@@ -13,72 +14,122 @@ class CartItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = BlocProvider.of<CartCubit>(context);
-    return Padding(
-      padding: const EdgeInsets.only(left: 6.0, right: 2.0, bottom: 8.0),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.surfaceCardDark : AppColors.surfaceCard;
+    final softBg = isDark ? AppColors.surfaceSoftDark : AppColors.surfaceSoft;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final textColor = isDark ? AppColors.textDark : AppColors.black;
+    final subtextColor = isDark ? AppColors.textSecondaryDark : AppColors.grey1;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          DecoratedBox(
+          Container(
+            height: 96,
+            width: 96,
             decoration: BoxDecoration(
-              color: AppColors.grey2,
-              borderRadius: BorderRadius.circular(16),
+              color: softBg,
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: CachedNetworkImage(
-              imageUrl: cartItem.product.imgUrl,
-              height: 125,
-              width: 125,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: CachedNetworkImage(
+                imageUrl: cartItem.product.imgUrl,
+                fit: BoxFit.contain,
+                placeholder:
+                    (_, __) => const Center(
+                      child: SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator.adaptive(
+                          strokeWidth: 2,
+                        ),
+                      ),
+                    ),
+                errorWidget:
+                    (_, __, ___) => const Icon(
+                      Icons.image_not_supported_outlined,
+                      color: AppColors.grey1,
+                    ),
+              ),
             ),
           ),
-          const SizedBox(width: 8.0),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Align(
-                  alignment: Alignment.topRight,
-                  child: SizedBox(
-                    height: 25,
-                    width: 25,
-                    child: InkWell(
-                      onTap: () => cubit.removeCartItem(cartItem.id),
-                      child: Icon(Icons.delete, color: AppColors.red),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        cartItem.product.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium!
+                            .copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: textColor,
+                            ),
+                      ),
+                    ),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => cubit.removeCartItem(cartItem.id),
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: AppColors.red,
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: softBg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${context.tr('size_label')}: ${cartItem.size.name}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: subtextColor,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                Text(
-                  cartItem.product.name,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 4.0),
-                Text.rich(
-                  TextSpan(
-                    text: 'Size: ',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium!.copyWith(color: AppColors.grey1),
-                    children: [
-                      TextSpan(
-                        text: cartItem.size.name,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12.0),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 16.0),
-                      child: CounterWidget(
-                        value: cartItem.quantity,
-                        onIncrement: () => cubit.incrementCounter(cartItem),
-                        onDecrement: () => cubit.decrementCounter(cartItem),
-                      ),
+                    CounterWidget(
+                      value: cartItem.quantity,
+                      onIncrement: () => cubit.incrementCounter(cartItem),
+                      onDecrement: () => cubit.decrementCounter(cartItem),
                     ),
                     Text(
-                      '\$${cartItem.totalPrice.toStringAsFixed(1)}',
-                      style: Theme.of(context).textTheme.headlineSmall!
-                          .copyWith(fontWeight: FontWeight.bold),
+                      '\$${cartItem.totalPrice.toStringAsFixed(2)}',
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.accentColor,
+                      ),
                     ),
                   ],
                 ),
