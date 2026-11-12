@@ -9,9 +9,22 @@ class FavoriteRepositoryImpl implements FavoriteRepository {
 
   @override
   Future<void> addFavorite(String userId, Product product) async {
+    final productModel =
+        product is ProductItemModel
+            ? product
+            : ProductItemModel(
+              id: product.id,
+              name: product.name,
+              imgUrl: product.imgUrl,
+              description: product.description,
+              price: product.price,
+              isFavorite: product.isFavorite,
+              category: product.category,
+              averageRate: product.averageRate,
+            );
     await firestoreServices.setData(
       path: ApiPaths.favoriteProduct(userId, product.id),
-      data: (product as ProductItemModel).toMap(),
+      data: productModel.toMap(),
     );
   }
 

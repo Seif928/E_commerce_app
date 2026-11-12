@@ -8,6 +8,7 @@ class UserData extends AppUser {
     required super.email,
     required super.createdAt,
     super.providerId,
+    super.photoUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -19,6 +20,7 @@ class UserData extends AppUser {
     result.addAll({'email': email});
     result.addAll({'createdAt': createdAt});
     result.addAll({'providerId': providerId});
+    result.addAll({'photoUrl': photoUrl});
 
     return result;
   }
@@ -31,6 +33,7 @@ class UserData extends AppUser {
       email: map['email'] ?? '',
       createdAt: map['createdAt'] ?? '',
       providerId: map['providerId'] ?? 'password',
+      photoUrl: map['photoUrl'] ?? '',
     );
   }
 }

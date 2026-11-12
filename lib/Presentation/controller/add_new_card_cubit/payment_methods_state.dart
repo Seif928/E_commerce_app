@@ -18,8 +18,9 @@ final class FetchingPaymentMethods extends PaymentMethodsState {}
 
 final class FetchedPaymentMethods extends PaymentMethodsState {
   final List<PaymentCard> paymentCards;
+  final String? selectedPaymentId;
 
-  FetchedPaymentMethods(this.paymentCards);
+  FetchedPaymentMethods(this.paymentCards, {this.selectedPaymentId});
 }
 
 final class FetchPaymentMethodsError extends PaymentMethodsState {

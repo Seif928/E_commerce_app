@@ -24,24 +24,24 @@ class HomeCarouselItemModel extends CarouselItem {
 }
 
 List<HomeCarouselItemModel> dummyHomeCarouselItems = [
-  HomeCarouselItemModel(
-    id: 'jf385EsSP2RzdIKucgW7',
+  const HomeCarouselItemModel(
+    id: '88',
     imgUrl:
-        'https://edit.org/photos/img/blog/mbp-template-banner-online-store-free.jpg-840.jpg',
+        'https://cdn.dummyjson.com/product-images/mens-shoes/nike-air-jordan-1-red-and-black/1.webp',
   ),
-  HomeCarouselItemModel(
-    id: 'btgMW23JED1zRsxqdKms',
+  const HomeCarouselItemModel(
+    id: '78',
     imgUrl:
-        'https://casalsonline.es/wp-content/uploads/2018/12/CASALS-ONLINE-18-DICIEMBRE.png',
+        'https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/1.webp',
   ),
-  HomeCarouselItemModel(
-    id: 'XjZBor795dLTO2ErQGi3',
+  const HomeCarouselItemModel(
+    id: '6',
     imgUrl:
-        'https://e0.pxfuel.com/wallpapers/606/84/desktop-wallpaper-ecommerce-website-design-company-noida-e-commerce-banner-design-e-commerce.jpg',
+        'https://cdn.dummyjson.com/product-images/fragrances/calvin-klein-ck-one/1.webp',
   ),
-  HomeCarouselItemModel(
-    id: '8u3jP9mBZYVSGq7JGoc6',
+  const HomeCarouselItemModel(
+    id: '93',
     imgUrl:
-        'https://marketplace.canva.com/EAFMdLQAxDU/1/0/1600w/canva-white-and-gray-modern-real-estate-modern-home-banner-NpQukS8X1oo.jpg',
+        'https://cdn.dummyjson.com/product-images/mens-watches/brown-leather-belt-watch/1.webp',
   ),
 ];

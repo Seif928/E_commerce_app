@@ -2,10 +2,10 @@ import 'package:e_commerce_app/Presentation/views/pages/cart_page.dart';
 import 'package:e_commerce_app/Presentation/views/pages/favorites_page.dart';
 import 'package:e_commerce_app/Presentation/views/pages/home_page.dart';
 import 'package:e_commerce_app/Presentation/views/pages/profile_page.dart';
+import 'package:e_commerce_app/core/localization/app_localizations.dart';
 import 'package:e_commerce_app/core/utils/app_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 
 class CustomBottomNavbar extends StatefulWidget {
@@ -17,7 +17,6 @@ class CustomBottomNavbar extends StatefulWidget {
 
 class _CustomBottomNavbarState extends State<CustomBottomNavbar> {
   late final PersistentTabController _controller;
-  int currentIndex = 0;
 
   @override
   void initState() {
@@ -25,83 +24,78 @@ class _CustomBottomNavbarState extends State<CustomBottomNavbar> {
     _controller = PersistentTabController();
   }
 
-  List<Widget> _buildScreens(BuildContext context) {
-    return [
-      const HomePage(),
-      const CartPage(),
-      const FavoritesPage(),
-      const ProfilePage(),
-    ];
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
-  List<ItemConfig> _navBarsItems() {
+  List<ItemConfig> _navBarsItems(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? AppColors.accentColor : AppColors.primaryColor;
+    final inactiveColor =
+        isDark ? AppColors.textSecondaryDark : AppColors.grey1;
+
     return [
       ItemConfig(
-        icon: const Icon(CupertinoIcons.home),
-        title: "Home",
-        activeForegroundColor: Theme.of(context).primaryColor,
-        // activeColorPrimary: Theme.of(context).primaryColor,
-        // inactiveColorPrimary: AppColors.grey,
+        icon: const Icon(CupertinoIcons.house_fill),
+        inactiveIcon: const Icon(CupertinoIcons.house),
+        title: context.tr('nav_discover'),
+        activeForegroundColor: activeColor,
+        inactiveForegroundColor: inactiveColor,
       ),
       ItemConfig(
-        icon: const Icon(CupertinoIcons.cart),
-        title: "Cart",
-        activeForegroundColor: Theme.of(context).primaryColor,
-        // activeColorPrimary: Theme.of(context).primaryColor,
-        // inactiveColorPrimary: AppColors.grey,
+        icon: const Icon(CupertinoIcons.bag_fill),
+        inactiveIcon: const Icon(CupertinoIcons.bag),
+        title: context.tr('nav_cart'),
+        activeForegroundColor: activeColor,
+        inactiveForegroundColor: inactiveColor,
       ),
       ItemConfig(
-        icon: const Icon(CupertinoIcons.heart),
-        title: "Favorites",
-        activeForegroundColor: Theme.of(context).primaryColor,
-        // activeColorPrimary: Theme.of(context).primaryColor,
-        // inactiveColorPrimary: AppColors.grey,
+        icon: const Icon(CupertinoIcons.heart_fill),
+        inactiveIcon: const Icon(CupertinoIcons.heart),
+        title: context.tr('nav_saved'),
+        activeForegroundColor: AppColors.accentColor,
+        inactiveForegroundColor: inactiveColor,
       ),
       ItemConfig(
-        icon: const Icon(CupertinoIcons.person),
-        title: "Profile",
-        activeForegroundColor: Theme.of(context).primaryColor,
-        // activeColorPrimary: Theme.of(context).primaryColor,
-        // inactiveColorPrimary: AppColors.grey,
+        icon: const Icon(CupertinoIcons.person_fill),
+        inactiveIcon: const Icon(CupertinoIcons.person),
+        title: context.tr('nav_account'),
+        activeForegroundColor: activeColor,
+        inactiveForegroundColor: inactiveColor,
       ),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final navBg = isDark ? AppColors.surfaceCardDark : AppColors.surfaceCard;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final items = _navBarsItems(context);
+
     return Scaffold(
       body: PersistentTabView(
         controller: _controller,
         tabs: [
-          PersistentTabConfig(
-            item: _navBarsItems()[0],
-            screen: _buildScreens(context)[0],
-          ),
-          PersistentTabConfig(
-            item: _navBarsItems()[1],
-            screen: _buildScreens(context)[1],
-          ),
-          PersistentTabConfig(
-            item: _navBarsItems()[2],
-            screen: _buildScreens(context)[2],
-          ),
-          PersistentTabConfig(
-            item: _navBarsItems()[3],
-            screen: _buildScreens(context)[3],
-          ),
+          PersistentTabConfig(item: items[0], screen: const HomePage()),
+          PersistentTabConfig(item: items[1], screen: const CartPage()),
+          PersistentTabConfig(item: items[2], screen: const FavoritesPage()),
+          PersistentTabConfig(item: items[3], screen: const ProfilePage()),
         ],
         navBarBuilder:
-            (navbarConfig) => Style1BottomNavBar(navBarConfig: navbarConfig),
-        onTabChanged: (index) {
-          setState(() {
-            currentIndex = index;
-          });
-        },
-        backgroundColor: AppColors.white1, // Default is Colors.white.
-        handleAndroidBackButtonPress: true, // Default is true.
-        resizeToAvoidBottomInset:
-            true, // This needs to be true if you want to move up the screen when keyboard appears. Default is true.
-        stateManagement: false, // Default is true.
+            (navbarConfig) => Style6BottomNavBar(
+              navBarConfig: navbarConfig,
+              navBarDecoration: NavBarDecoration(
+                color: navBg,
+                border: Border(top: BorderSide(color: borderColor, width: 1)),
+              ),
+            ),
+        backgroundColor: navBg,
+        handleAndroidBackButtonPress: true,
+        resizeToAvoidBottomInset: true,
+        stateManagement: false,
       ),
     );
   }

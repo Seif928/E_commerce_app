@@ -11,7 +11,7 @@ class MainButton extends StatelessWidget {
 
   MainButton({
     super.key,
-    this.height = 60,
+    this.height = 54,
     this.onTap,
     this.backgroundColor = AppColors.primaryColor,
     this.foregroundColor = AppColors.white1,
@@ -31,11 +31,30 @@ class MainButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
         child:
             isLoading
-                ? const Center(child: CircularProgressIndicator.adaptive())
-                : Text(text!),
+                ? const Center(
+                  child: SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator.adaptive(
+                      strokeWidth: 2.2,
+                    ),
+                  ),
+                )
+                : Text(
+                  text!,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
+                ),
       ),
     );
   }

@@ -12,9 +12,22 @@ class AddToCartModel extends CartItem {
 
   Map<String, dynamic> toMap() {
     final result = <String, dynamic>{};
+    final productModel =
+        product is ProductItemModel
+            ? product as ProductItemModel
+            : ProductItemModel(
+              id: product.id,
+              name: product.name,
+              imgUrl: product.imgUrl,
+              description: product.description,
+              price: product.price,
+              isFavorite: product.isFavorite,
+              category: product.category,
+              averageRate: product.averageRate,
+            );
 
     result.addAll({'id': id});
-    result.addAll({'product': (product as ProductItemModel).toMap()});
+    result.addAll({'product': productModel.toMap()});
     result.addAll({'size': size.name});
     result.addAll({'quantity': quantity});
 

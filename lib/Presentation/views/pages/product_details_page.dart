@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:e_commerce_app/Presentation/controller/favorite_cubit/favorite_cubit.dart';
 import 'package:e_commerce_app/Presentation/controller/product_details_cubit/product_details_cubit.dart';
 import 'package:e_commerce_app/Presentation/views/widgets/counter_widget.dart';
+import 'package:e_commerce_app/core/localization/app_localizations.dart';
 import 'package:e_commerce_app/core/utils/app_colors.dart';
 import 'package:e_commerce_app/core/utils/app_route.dart';
 import 'package:e_commerce_app/domain/entities/product.dart';
@@ -12,11 +13,23 @@ class ProductDetailsPage extends StatelessWidget {
   final String productId;
   const ProductDetailsPage({super.key, required this.productId});
 
+  void _navigateBack(BuildContext context) {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(
+        context,
+        rootNavigator: true,
+      ).pushNamedAndRemoveUntil(AppRoute.homeRoute, (route) => false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final cubitProductDetails = BlocProvider.of<ProductDetailsCubit>(context);
     final cubitFavoriteProduct = BlocProvider.of<FavoriteCubit>(context);
+
     return BlocBuilder<ProductDetailsCubit, ProductDetailsState>(
       bloc: cubitProductDetails,
       buildWhen:
@@ -30,383 +43,519 @@ class ProductDetailsPage extends StatelessWidget {
             body: Center(child: CircularProgressIndicator.adaptive()),
           );
         } else if (state is ProductDetailsError) {
-          return Scaffold(body: Center(child: Text(state.message)));
+          return Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                onPressed: () => _navigateBack(context),
+                icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+              ),
+              title: const Text('Product Details'),
+            ),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(state.message, textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed:
+                          () =>
+                              cubitProductDetails.getProductDetails(productId),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
         } else if (state is ProductDetailsLoaded) {
           final product = state.product;
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final cardBg = isDark ? AppColors.surfaceCardDark : AppColors.surfaceCard;
+          final softBg = isDark ? AppColors.surfaceSoftDark : AppColors.surfaceSoft;
+          final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+          final textColor = isDark ? AppColors.textDark : AppColors.black;
+          final subtextColor = isDark ? AppColors.textSecondaryDark : AppColors.grey1;
+
           return Scaffold(
-            extendBodyBehindAppBar: true,
+            backgroundColor: isDark ? AppColors.scaffoldBgDark : AppColors.surfaceSoft,
             appBar: AppBar(
-              leading: InkWell(
-                onTap: () {
-                  Navigator.of(
-                    context,
-                    rootNavigator: true,
-                  ).pushNamedAndRemoveUntil(
-                    AppRoute.homeRoute,
-                    (route) => false,
-                  );
-                },
-                child: const Icon(Icons.arrow_back_ios_new),
-              ),
               backgroundColor: Colors.transparent,
-              elevation: 0,
-              centerTitle: true,
+              leading: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Material(
+                  color: cardBg,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () => _navigateBack(context),
+                    child: Icon(
+                      context.isArabic
+                          ? Icons.arrow_forward_ios_rounded
+                          : Icons.arrow_back_ios_new_rounded,
+                      size: 18,
+                      color: textColor,
+                    ),
+                  ),
+                ),
+              ),
               title: Text(
-                'Product Details',
+                context.trCategory(product.category),
                 style: Theme.of(
                   context,
-                ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600),
+                ).textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: textColor,
+                ),
               ),
               actions: [
-                BlocConsumer<FavoriteCubit, FavoriteState>(
-                  bloc: cubitFavoriteProduct,
-                  listenWhen:
-                      (previous, current) =>
-                          (current is FavoriteRemoveError ||
-                              current is SetFavoriteLoadedError),
-                  listener: (context, state) {
-                    if (state is FavoriteRemoveError) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(state.error)));
-                    } else if (state is SetFavoriteLoadedError) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(state.error)));
-                    }
-                  },
-                  buildWhen:
-                      (previous, current) =>
-                          current is FavoriteLoaded ||
-                          current is FavoriteInitial ||
-                          (current is SetFavoriteLoading &&
-                              current.productId == product.id) ||
-                          (current is FavoriteRemoving &&
-                              current.productId == product.id),
-                  builder: (context, state) {
-                    final isFavLoading =
-                        (state is SetFavoriteLoading &&
-                            state.productId == product.id) ||
-                        (state is FavoriteRemoving &&
-                            state.productId == product.id);
+                Padding(
+                  padding: const EdgeInsets.only(right: 12.0),
+                  child: BlocConsumer<FavoriteCubit, FavoriteState>(
+                    bloc: cubitFavoriteProduct,
+                    listenWhen:
+                        (previous, current) =>
+                            current is FavoriteRemoveError ||
+                            current is SetFavoriteLoadedError,
+                    listener: (context, favState) {
+                      if (favState is FavoriteRemoveError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(favState.error)),
+                        );
+                      } else if (favState is SetFavoriteLoadedError) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(favState.error)),
+                        );
+                      }
+                    },
+                    buildWhen:
+                        (previous, current) =>
+                            current is FavoriteLoaded ||
+                            current is FavoriteInitial ||
+                            (current is SetFavoriteLoading &&
+                                current.productId == product.id) ||
+                            (current is FavoriteRemoving &&
+                                current.productId == product.id),
+                    builder: (context, favState) {
+                      final isFavLoading =
+                          (favState is SetFavoriteLoading &&
+                              favState.productId == product.id) ||
+                          (favState is FavoriteRemoving &&
+                              favState.productId == product.id);
+                      final isFav =
+                          favState is FavoriteLoaded
+                              ? favState.favoriteProducts.any(
+                                (p) => p.id == product.id,
+                              )
+                              : product.isFavorite;
 
-                    if (isFavLoading) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Center(
-                          child: SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator.adaptive(
-                              strokeWidth: 2,
-                            ),
+                      return Material(
+                        color: cardBg,
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap:
+                              isFavLoading
+                                  ? null
+                                  : () => cubitFavoriteProduct.setFavorite(
+                                    product,
+                                  ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child:
+                                isFavLoading
+                                    ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator.adaptive(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                    : Icon(
+                                      isFav
+                                          ? Icons.favorite_rounded
+                                          : Icons.favorite_border_rounded,
+                                      color:
+                                          isFav
+                                              ? AppColors.red
+                                              : textColor,
+                                      size: 20,
+                                    ),
                           ),
                         ),
                       );
-                    }
-
-                    final isFav =
-                        state is FavoriteLoaded
-                            ? state.favoriteProducts.any(
-                              (p) => p.id == product.id,
-                            )
-                            : product.isFavorite;
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: InkWell(
-                        onTap: () async {
-                          await cubitFavoriteProduct.setFavorite(product);
-                        },
-                        child:
-                            isFav
-                                ? const Icon(Icons.favorite, color: Colors.red)
-                                : const Icon(Icons.favorite_border),
-                      ),
-                    );
-                  },
+                    },
+                  ),
                 ),
               ],
             ),
-
-            body: Stack(
+            body: Column(
               children: [
-                Container(
-                  height: size.height * 0.48,
+                SizedBox(
+                  height: size.height * 0.32,
                   width: double.infinity,
-                  decoration: BoxDecoration(color: AppColors.grey2),
-                  child: Column(
-                    children: [
-                      SizedBox(height: size.height * 0.1),
-                      CachedNetworkImage(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28.0,
+                      vertical: 12.0,
+                    ),
+                    child: Hero(
+                      tag: 'product_${product.id}',
+                      child: CachedNetworkImage(
                         imageUrl: product.imgUrl,
-                        height: size.height * 0.3,
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: size.height * 0.40),
-                  child: Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: AppColors.white1,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(50),
-                        topRight: Radius.circular(50),
+                        fit: BoxFit.contain,
+                        placeholder:
+                            (_, __) => const Center(
+                              child: CircularProgressIndicator.adaptive(),
+                            ),
+                        errorWidget:
+                            (_, __, ___) => const Center(
+                              child: Icon(
+                                Icons.image_not_supported_outlined,
+                                size: 48,
+                                color: AppColors.grey1,
+                              ),
+                            ),
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(36.0),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(28),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  product.name,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.headlineSmall!.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: textColor,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? AppColors.surfaceSoftDark
+                                      : AppColors.accentSoft,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      product.name,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleLarge!.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    const Icon(
+                                      Icons.star_rounded,
+                                      color: AppColors.yellow,
+                                      size: 18,
                                     ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.star,
-                                          color: AppColors.yellow,
-                                          size: 25,
-                                        ),
-                                        const SizedBox(width: 5),
-                                        Text(
-                                          product.averageRate.toString(),
-                                          style:
-                                              Theme.of(
-                                                context,
-                                              ).textTheme.titleMedium,
-                                        ),
-                                      ],
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      product.averageRate.toStringAsFixed(1),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: textColor,
+                                      ),
                                     ),
                                   ],
                                 ),
-                                BlocBuilder<
-                                  ProductDetailsCubit,
-                                  ProductDetailsState
-                                >(
-                                  bloc: cubitProductDetails,
-                                  buildWhen:
-                                      (previous, current) =>
-                                          current is QuantityCounterLoaded ||
-                                          current is ProductDetailsLoaded,
-                                  builder: (context, state) {
-                                    int quantityValue =
-                                        cubitProductDetails.quantity;
-                                    if (state is QuantityCounterLoaded) {
-                                      quantityValue = state.value;
-                                    } else if (state is ProductDetailsLoaded) {
-                                      quantityValue = 1;
-                                    }
-                                    return CounterWidget(
-                                      value: quantityValue,
-                                      onIncrement:
-                                          () => cubitProductDetails
-                                              .incrementCounter(product.id),
-                                      onDecrement:
-                                          () => cubitProductDetails
-                                              .decrementCounter(product.id),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Size',
-                              style: Theme.of(context).textTheme.titleMedium!
-                                  .copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            BlocBuilder<
-                              ProductDetailsCubit,
-                              ProductDetailsState
-                            >(
-                              bloc: cubitProductDetails,
-                              buildWhen:
-                                  (previous, current) =>
-                                      current is SizeSelected ||
-                                      current is ProductDetailsLoaded,
-                              builder: (context, state) {
-                                return Row(
-                                  children:
-                                      ProductSize.values
-                                          .map(
-                                            (size) => Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 6.0,
-                                                right: 8.0,
-                                              ),
-                                              child: InkWell(
-                                                onTap: () {
-                                                  BlocProvider.of<
-                                                    ProductDetailsCubit
-                                                  >(context).selectSize(size);
-                                                },
-                                                child: DecoratedBox(
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    color:
-                                                        state is SizeSelected &&
-                                                                state.size ==
-                                                                    size
-                                                            ? Theme.of(
-                                                              context,
-                                                            ).primaryColor
-                                                            : AppColors.grey2,
-                                                  ),
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                          12.0,
-                                                        ),
-                                                    child: Text(
-                                                      size.name,
-                                                      style: Theme.of(
-                                                        context,
-                                                      ).textTheme.labelMedium!.copyWith(
-                                                        color:
-                                                            state
-                                                                        is SizeSelected &&
-                                                                    state.size ==
-                                                                        size
-                                                                ? AppColors
-                                                                    .white1
-                                                                : AppColors
-                                                                    .black,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          )
-                                          .toList(),
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Description',
-                              style: Theme.of(context).textTheme.titleMedium!
-                                  .copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8.0),
-                            Text(
-                              product.description,
-                              style: Theme.of(context).textTheme.labelMedium!
-                                  .copyWith(color: AppColors.black),
-                            ),
-                            SizedBox(height: size.height * 0.02),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text.rich(
-                                  TextSpan(
-                                    text: '\$',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleLarge!.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).primaryColor,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                context.tr('select_size'),
+                                style: Theme.of(context).textTheme.titleMedium!
+                                    .copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: textColor,
                                     ),
-                                    children: [
-                                      TextSpan(
-                                        text: product.price.toString(),
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.titleLarge!.copyWith(
-                                          fontWeight: FontWeight.bold,
+                              ),
+                              BlocBuilder<
+                                ProductDetailsCubit,
+                                ProductDetailsState
+                              >(
+                                bloc: cubitProductDetails,
+                                buildWhen:
+                                    (previous, current) =>
+                                        current is QuantityCounterLoaded ||
+                                        current is ProductDetailsLoaded,
+                                builder: (context, qtyState) {
+                                  final qty =
+                                      qtyState is QuantityCounterLoaded
+                                          ? qtyState.value
+                                          : cubitProductDetails.quantity;
+                                  return CounterWidget(
+                                    value: qty,
+                                    onIncrement:
+                                        () => cubitProductDetails
+                                            .incrementCounter(product.id),
+                                    onDecrement:
+                                        () => cubitProductDetails
+                                            .decrementCounter(product.id),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          BlocBuilder<
+                            ProductDetailsCubit,
+                            ProductDetailsState
+                          >(
+                            bloc: cubitProductDetails,
+                            buildWhen:
+                                (previous, current) =>
+                                    current is SizeSelected ||
+                                    current is ProductDetailsLoaded,
+                            builder: (context, sizeState) {
+                              final currentSize =
+                                  sizeState is SizeSelected
+                                      ? sizeState.size
+                                      : cubitProductDetails.selectedSize;
+                              return Wrap(
+                                spacing: 10,
+                                children:
+                                    ProductSize.values.map((itemSize) {
+                                      final isSelected =
+                                          currentSize == itemSize;
+                                      return ChoiceChip(
+                                        label: Text(itemSize.name),
+                                        selected: isSelected,
+                                        showCheckmark: false,
+                                        selectedColor:
+                                            isDark
+                                                ? AppColors.accentColor
+                                                : AppColors.primaryColor,
+                                        backgroundColor: softBg,
+                                        labelStyle: TextStyle(
+                                          color:
+                                              isSelected
+                                                  ? AppColors.white1
+                                                  : textColor,
+                                          fontWeight: FontWeight.w700,
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                BlocBuilder<
-                                  ProductDetailsCubit,
-                                  ProductDetailsState
-                                >(
-                                  bloc: cubitProductDetails,
-                                  buildWhen:
-                                      (previous, current) =>
-                                          current is ProductAddedToCart ||
-                                          current is ProductAddingToCart,
-                                  builder: (context, state) {
-                                    if (state is ProductAddingToCart) {
-                                      return ElevatedButton(
-                                        onPressed: null,
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              AppColors.primaryColor,
-                                          foregroundColor: AppColors.white1,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          side: BorderSide(
+                                            color:
+                                                isSelected
+                                                    ? (isDark
+                                                        ? AppColors.accentColor
+                                                        : AppColors.primaryColor)
+                                                    : borderColor,
+                                          ),
                                         ),
-                                        child:
-                                            const CircularProgressIndicator.adaptive(),
+                                        onSelected:
+                                            (_) => cubitProductDetails
+                                                .selectSize(itemSize),
                                       );
-                                    } else if (state is ProductAddedToCart) {
-                                      return ElevatedButton(
-                                        onPressed: null,
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              AppColors.primaryColor,
-                                          foregroundColor: AppColors.white1,
-                                        ),
-                                        child: const Text('Added To Cart'),
-                                      );
-                                    }
-                                    return ElevatedButton.icon(
-                                      onPressed: () {
-                                        if (cubitProductDetails.selectedSize !=
-                                            null) {
-                                          cubitProductDetails.addToCart(
-                                            product.id,
-                                          );
-                                        } else {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Please select size',
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primaryColor,
-                                        foregroundColor: AppColors.white1,
-                                      ),
-                                      label: const Text('Add to Cart'),
-                                      icon: const Icon(
-                                        Icons.shopping_bag_outlined,
-                                      ),
-                                    );
-                                  },
+                                    }).toList(),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            context.tr('description'),
+                            style: Theme.of(context).textTheme.titleMedium!
+                                .copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: textColor,
                                 ),
-                              ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            product.description.isNotEmpty
+                                ? product.description
+                                : context.tr('default_product_desc'),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium!.copyWith(
+                              color: subtextColor,
+                              height: 1.5,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ],
+            ),
+            bottomNavigationBar: Container(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+              decoration: BoxDecoration(
+                color: cardBg,
+                border: Border(
+                  top: BorderSide(color: borderColor),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: isDark ? 0.3 : 0.05,
+                    ),
+                    blurRadius: 16,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Row(
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('price'),
+                          style: TextStyle(
+                            color: subtextColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        BlocBuilder<ProductDetailsCubit, ProductDetailsState>(
+                          bloc: cubitProductDetails,
+                          buildWhen:
+                              (previous, current) =>
+                                  current is QuantityCounterLoaded ||
+                                  current is ProductDetailsLoaded,
+                          builder: (context, qtyState) {
+                            final qty =
+                                qtyState is QuantityCounterLoaded
+                                    ? qtyState.value
+                                    : cubitProductDetails.quantity;
+                            return Text(
+                              '\$${(product.price * qty).toStringAsFixed(2)}',
+                              style: Theme.of(
+                                context,
+                              ).textTheme.titleLarge!.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.accentColor,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: BlocConsumer<
+                        ProductDetailsCubit,
+                        ProductDetailsState
+                      >(
+                        bloc: cubitProductDetails,
+                        listenWhen:
+                            (previous, current) =>
+                                current is ProductAddedToCart ||
+                                current is ProductAddToCartError,
+                        listener: (context, cartState) {
+                          if (cartState is ProductAddedToCart) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  context.tr('item_added_to_cart'),
+                                ),
+                              ),
+                            );
+                          } else if (cartState is ProductAddToCartError) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  context.trError(cartState.message),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        buildWhen:
+                            (previous, current) =>
+                                current is ProductAddedToCart ||
+                                current is ProductAddingToCart ||
+                                current is ProductAddToCartError ||
+                                current is SizeSelected ||
+                                current is QuantityCounterLoaded,
+                        builder: (context, cartState) {
+                          if (cartState is ProductAddingToCart) {
+                            return const ElevatedButton(
+                              onPressed: null,
+                              child: SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator.adaptive(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            );
+                          }
+                          final isAdded = cartState is ProductAddedToCart;
+                          return ElevatedButton.icon(
+                            onPressed:
+                                isAdded
+                                    ? null
+                                    : () {
+                                      if (cubitProductDetails.selectedSize !=
+                                          null) {
+                                        cubitProductDetails.addToCart(
+                                          product.id,
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              context.trError(
+                                                'Please select a size first',
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                            icon: Icon(
+                              isAdded
+                                  ? Icons.check_circle_outline
+                                  : Icons.shopping_bag_outlined,
+                            ),
+                            label: Text(
+                              isAdded
+                                  ? context.tr('item_added_to_cart')
+                                  : context.tr('add_to_cart'),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           );
         } else {

@@ -59,3 +59,17 @@ final class FacebookAuthError extends AuthState {
 final class FacebookAuthDone extends AuthState {
   const FacebookAuthDone();
 }
+
+final class PasswordResetLoading extends AuthState {
+  const PasswordResetLoading();
+}
+
+final class PasswordResetSuccess extends AuthState {
+  const PasswordResetSuccess();
+}
+
+final class PasswordResetError extends AuthState {
+  final String message;
+
+  const PasswordResetError(this.message);
+}

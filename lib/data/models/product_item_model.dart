@@ -40,87 +40,91 @@ class ProductItemModel extends Product {
 }
 
 List<ProductItemModel> dummyProducts = [
-  ProductItemModel(
-    id: 'K434118okA3XH70vmCgI',
-    name: 'Black Shoes',
-    imgUrl: 'https://pngimg.com/d/men_shoes_PNG7475.png',
-    price: 20,
-    category: 'Shoes',
-  ),
-  ProductItemModel(
-    id: '3p6nOiAbCwlKNZkme7t2',
-    name: 'Trousers',
+  const ProductItemModel(
+    id: '1',
+    name: 'Essence Mascara Lash Princess',
     imgUrl:
-        'https://www.pngall.com/wp-content/uploads/2016/09/Trouser-Free-Download-PNG.png',
-    price: 30,
-    category: 'Clothes',
+        'https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp',
+    description:
+        'Volumizing and lengthening mascara formula for a dramatic lash finish that lasts all day.',
+    price: 9.99,
+    category: 'Beauty',
+    averageRate: 4.5,
   ),
-  ProductItemModel(
-    id: 'Y4xM7ukLvqRsurgioQmN',
-    name: 'Pack of Tomatoes',
+  const ProductItemModel(
+    id: '6',
+    name: 'Calvin Klein CK One',
     imgUrl:
-        'https://parspng.com/wp-content/uploads/2022/12/tomatopng.parspng.com-6.png',
-    price: 10,
+        'https://cdn.dummyjson.com/product-images/fragrances/calvin-klein-ck-one/thumbnail.webp',
+    description:
+        'Classic unisex eau de toilette with crisp citrus and warm amber notes for everyday wear.',
+    price: 49.99,
+    category: 'Fragrances',
+    averageRate: 4.7,
+  ),
+  const ProductItemModel(
+    id: '11',
+    name: 'Annibale Colombo Bed',
+    imgUrl:
+        'https://cdn.dummyjson.com/product-images/furniture/annibale-colombo-bed/thumbnail.webp',
+    description:
+        'Crafted solid-wood luxury bed frame combining timeless Italian tailoring with modern comfort.',
+    price: 1899.99,
+    category: 'Furniture',
+    averageRate: 4.8,
+  ),
+  const ProductItemModel(
+    id: '16',
+    name: 'Fresh Red Apples',
+    imgUrl: 'https://cdn.dummyjson.com/product-images/groceries/apple/thumbnail.webp',
+    description:
+        'Crisp hand-picked organic red apples packed fresh for daily snacking and healthy recipes.',
+    price: 3.49,
     category: 'Groceries',
+    averageRate: 4.6,
   ),
-  ProductItemModel(
-    id: 'OHncCKAImAwC9jg9XPam',
-    name: 'Pack of Potatoes',
-    imgUrl: 'https://pngimg.com/d/potato_png2398.png',
-    price: 10,
-    category: 'Groceries',
-  ),
-  ProductItemModel(
-    id: '7WqSYwiEbed0G05zM72u',
-    name: 'Pack of Onions',
-    imgUrl: 'https://pngimg.com/d/onion_PNG99213.png',
-    price: 10,
-    category: 'Groceries',
-  ),
-  ProductItemModel(
-    id: 'NQwKrejnxOFcgAzdkoQm',
-    name: 'Pack of Apples',
-    imgUrl: 'https://pngfre.com/wp-content/uploads/apple-43-1024x1015.png',
-    price: 10,
-    category: 'Fruits',
-  ),
-  ProductItemModel(
-    id: 'uIVHYv1tLpiC3Jwik8b0',
-    name: 'Pack of Oranges',
+  const ProductItemModel(
+    id: '78',
+    name: 'Apple MacBook Pro 14"',
     imgUrl:
-        'https://parspng.com/wp-content/uploads/2022/05/orangepng.parspng.com_-1.png',
-    price: 10,
-    category: 'Fruits',
+        'https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/thumbnail.webp',
+    description:
+        'High-performance M-series laptop with Liquid Retina XDR display and all-day battery life.',
+    price: 1999.99,
+    category: 'Laptops',
+    averageRate: 4.9,
   ),
-  ProductItemModel(
-    id: 'BOQKlAc0GlRZXOmzcs1l',
-    name: 'Pack of Bananas',
+  const ProductItemModel(
+    id: '83',
+    name: 'Blue & Black Check Shirt',
     imgUrl:
-        'https://static.vecteezy.com/system/resources/previews/015/100/096/original/bananas-transparent-background-free-png.png',
-    price: 10,
-    category: 'Fruits',
+        'https://cdn.dummyjson.com/product-images/mens-shirts/blue-&-black-check-shirt/thumbnail.webp',
+    description:
+        'Soft brushed cotton button-down shirt tailored for effortless casual and smart-casual styling.',
+    price: 29.99,
+    category: 'Mens Shirts',
+    averageRate: 4.4,
   ),
-  ProductItemModel(
-    id: 'atZHZfhF5glVKKO3XCtz',
-    name: 'Pack of Mangoes',
-    imgUrl: 'https://purepng.com/public/uploads/large/mango-tgy.png',
-    price: 10,
-    category: 'Fruits',
-  ),
-  ProductItemModel(
-    id: 'jXDJxAUnBWJTXrOn5V1n',
-    name: 'Sweet Shirt',
+  const ProductItemModel(
+    id: '88',
+    name: 'Nike Air Jordan 1 Red & Black',
     imgUrl:
-        'https://www.usherbrand.com/cdn/shop/products/5uYjJeWpde9urtZyWKwFK4GHS6S3thwKRuYaMRph7bBDyqSZwZ_87x1mq24b2e7_1800x1800.png',
-    price: 15,
-    category: 'Clothes',
+        'https://cdn.dummyjson.com/product-images/mens-shoes/nike-air-jordan-1-red-and-black/thumbnail.webp',
+    description:
+        'Iconic high-top leather sneaker featuring cushioned Air sole and heritage court traction.',
+    price: 149.99,
+    category: 'Mens Shoes',
+    averageRate: 4.8,
   ),
-  ProductItemModel(
-    id: 'PjORGdvg4dVIxnVjjhgB',
-    name: 'T-shirt',
+  const ProductItemModel(
+    id: '93',
+    name: 'Brown Leather Belt Watch',
     imgUrl:
-        'https://parspng.com/wp-content/uploads/2022/07/Tshirtpng.parspng.com_.png',
-    price: 10,
-    category: 'Clothes',
+        'https://cdn.dummyjson.com/product-images/mens-watches/brown-leather-belt-watch/thumbnail.webp',
+    description:
+        'Minimalist analog chronograph paired with a stitched full-grain brown leather strap.',
+    price: 89.99,
+    category: 'Mens Watches',
+    averageRate: 4.6,
   ),
 ];

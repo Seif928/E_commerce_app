@@ -18,31 +18,57 @@ class EmptyShippingAndPayment extends StatelessWidget {
   Widget build(BuildContext context) {
     final checkoutCubit = BlocProvider.of<CheckoutCubit>(context);
     final paymentCubit = BlocProvider.of<PaymentMethodsCubit>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.surfaceCardDark : AppColors.surfaceCard;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final textColor = isDark ? AppColors.textDark : AppColors.black;
 
-    return InkWell(
-      onTap: () {
-        if (isPayment) {
-          Navigator.of(context)
-              .pushNamed(AppRoute.addNewCardRoute, arguments: paymentCubit)
-              .then((value) async => await checkoutCubit.getCheckoutContent());
-        } else {
-          Navigator.of(context)
-              .pushNamed(AppRoute.chooseLocation)
-              .then((value) async => await checkoutCubit.getCheckoutContent());
-        }
-      },
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: AppColors.grey1,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-          child: Column(
+    return Material(
+      color: cardBg,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          if (isPayment) {
+            Navigator.of(context)
+                .pushNamed(AppRoute.addNewCardRoute, arguments: paymentCubit)
+                .then((_) async => await checkoutCubit.getCheckoutContent());
+          } else {
+            Navigator.of(context)
+                .pushNamed(AppRoute.chooseLocation)
+                .then((_) async => await checkoutCubit.getCheckoutContent());
+          }
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.add, size: 30),
-              Text(title, style: Theme.of(context).textTheme.labelLarge),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: const BoxDecoration(
+                  color: AppColors.accentSoft,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.add_rounded,
+                  size: 20,
+                  color: AppColors.accentColor,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: textColor,
+                ),
+              ),
             ],
           ),
         ),

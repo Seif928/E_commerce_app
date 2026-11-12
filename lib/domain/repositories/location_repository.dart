@@ -6,5 +6,6 @@ abstract class LocationRepository {
     bool chosen = false,
   });
   Future<void> setLocation(Location location, String userId);
+  Future<void> deleteLocation(String userId, String locationId);
   Future<Location> fetchLocation(String userId, String locationId);
 }

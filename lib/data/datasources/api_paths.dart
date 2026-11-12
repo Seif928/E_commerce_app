@@ -16,4 +16,7 @@ class ApiPaths {
   static String announcements() => 'announcements';
   static String categories() => 'categories';
   static String product(String productId) => 'products/$productId';
+  static String orders(String userId) => 'users/$userId/orders';
+  static String order(String userId, String orderId) =>
+      'users/$userId/orders/$orderId';
 }

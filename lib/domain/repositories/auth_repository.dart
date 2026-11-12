@@ -7,5 +7,6 @@ abstract class AuthRepository {
   Future<bool> authenticateWithFacebook();
   Future<void> logout();
   Future<void> saveUserData(AppUser user);
+  Future<void> sendPasswordResetEmail(String email);
   String? get currentUserId;
 }

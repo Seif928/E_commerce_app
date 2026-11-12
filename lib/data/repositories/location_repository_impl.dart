@@ -25,6 +25,12 @@ class LocationRepositoryImpl implements LocationRepository {
   }
 
   @override
+  Future<void> deleteLocation(String userId, String locationId) async =>
+      await firestoreServices.deleteData(
+        path: ApiPaths.location(userId, locationId),
+      );
+
+  @override
   Future<List<Location>> fetchLocations(
     String userId, {
     bool chosen = false,

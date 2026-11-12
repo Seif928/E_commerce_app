@@ -20,13 +20,18 @@ class ProfileCubit extends Cubit<ProfileState> {
   final AuthRepository _authRepository;
 
   Future<void> getUserData() async {
+    final currentUserId = _authRepository.currentUserId;
+    if (currentUserId == null) {
+      emit(ProfileInitial());
+      return;
+    }
     emit(ProfileLoading());
     try {
-      final currentUserId = _authRepository.currentUserId!;
-
       final data = await _profileRepository.getUserData(currentUserId);
+      if (isClosed) return;
       emit(ProfileLoaded(user: data));
     } catch (e) {
+      if (isClosed) return;
       emit(ProfileLoadedError(error: e.toString()));
     }
   }
@@ -34,69 +39,76 @@ class ProfileCubit extends Cubit<ProfileState> {
   Future<void> updateUserName({required String name}) async {
     emit(ProfileUpdating());
     try {
-      final currentUserId = _authRepository.currentUserId!;
+      final currentUserId = _authRepository.currentUserId;
+      if (currentUserId == null) {
+        emit(const ProfileUpdatingFailed(error: 'User is not logged in'));
+        return;
+      }
       await _profileRepository.changeUserName(currentUserId, name);
       final data = await _profileRepository.getUserData(currentUserId);
-      emit(
-        ProfileUpdatedSuccess(
-          user: AppUser(
-            id: currentUserId,
-            password: '',
-            username: name,
-            email: '',
-            createdAt: DateTime.now().toIso8601String(),
-          ),
-        ),
-      );
+      if (isClosed) return;
+      emit(ProfileUpdatedSuccess(user: data));
       emit(ProfileLoaded(user: data));
     } catch (e) {
-      emit(ProfileLoadedError(error: e.toString()));
+      if (isClosed) return;
+      emit(ProfileUpdatingFailed(error: e.toString()));
     }
   }
 
   Future<void> updateEmail({required String newEmail}) async {
     emit(ProfileUpdating());
     try {
-      final currentUserId = _authRepository.currentUserId!;
+      final currentUserId = _authRepository.currentUserId;
+      if (currentUserId == null) {
+        emit(const ProfileUpdatingFailed(error: 'User is not logged in'));
+        return;
+      }
       await _profileRepository.changeUserEmail(currentUserId, newEmail);
       final data = await _profileRepository.getUserData(currentUserId);
-      emit(
-        ProfileUpdatedSuccess(
-          user: AppUser(
-            id: currentUserId,
-            password: '',
-            username: '',
-            email: newEmail,
-            createdAt: DateTime.now().toIso8601String(),
-          ),
-        ),
-      );
+      if (isClosed) return;
+      emit(ProfileUpdatedSuccess(user: data));
       emit(ProfileLoaded(user: data));
     } catch (e) {
-      emit(ProfileLoadedError(error: e.toString()));
+      if (isClosed) return;
+      emit(ProfileUpdatingFailed(error: e.toString()));
     }
   }
 
   Future<void> updatePassword({required String newPassword}) async {
     emit(ProfileUpdating());
     try {
-      final currentUserId = _authRepository.currentUserId!;
+      final currentUserId = _authRepository.currentUserId;
+      if (currentUserId == null) {
+        emit(const ProfileUpdatingFailed(error: 'User is not logged in'));
+        return;
+      }
       await _profileRepository.changeUserPassword(currentUserId, newPassword);
       final data = await _profileRepository.getUserData(currentUserId);
-      emit(
-        ProfileUpdatedSuccess(
-          user: AppUser(
-            id: currentUserId,
-            password: newPassword,
-            username: '',
-            email: '',
-            createdAt: DateTime.now().toIso8601String(),
-          ),
-        ),
-      );
+      if (isClosed) return;
+      emit(ProfileUpdatedSuccess(user: data));
       emit(ProfileLoaded(user: data));
     } catch (e) {
-      emit(ProfileLoadedError(error: e.toString()));
+      if (isClosed) return;
+      emit(ProfileUpdatingFailed(error: e.toString()));
+    }
+  }
+
+  Future<void> updateProfilePhoto({required String photoUrl}) async {
+    emit(ProfileUpdating());
+    try {
+      final currentUserId = _authRepository.currentUserId;
+      if (currentUserId == null) {
+        emit(const ProfileUpdatingFailed(error: 'User is not logged in'));
+        return;
+      }
+      await _profileRepository.updateUserPhoto(currentUserId, photoUrl);
+      final data = await _profileRepository.getUserData(currentUserId);
+      if (isClosed) return;
+      emit(ProfileUpdatedSuccess(user: data));
+      emit(ProfileLoaded(user: data));
+    } catch (e) {
+      if (isClosed) return;
+      emit(ProfileUpdatingFailed(error: e.toString()));
     }
   }
 }

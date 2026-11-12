@@ -2,6 +2,7 @@ import 'package:e_commerce_app/data/repositories/auth_repository_impl.dart';
 import 'package:e_commerce_app/data/repositories/favorite_repository_impl.dart';
 import 'package:e_commerce_app/data/repositories/home_repository_impl.dart';
 import 'package:e_commerce_app/domain/entities/carousel_item.dart';
+import 'package:e_commerce_app/domain/entities/category.dart';
 import 'package:e_commerce_app/domain/entities/product.dart';
 import 'package:e_commerce_app/domain/repositories/auth_repository.dart';
 import 'package:e_commerce_app/domain/repositories/favorite_repository.dart';
@@ -30,9 +31,11 @@ class HomeCubit extends Cubit<HomeState> {
       final currentUserId = _authRepository.currentUserId;
       final products = await _homeRepository.fetchProducts();
       final carouselItems = await _homeRepository.fetchCarouselItems();
-      final favoriteProducts = await _favoriteRepository.getFavorites(
-        currentUserId!,
-      );
+      final categories = await _homeRepository.fetchCategories();
+      final favoriteProducts =
+          currentUserId != null
+              ? await _favoriteRepository.getFavorites(currentUserId)
+              : <Product>[];
 
       final List<Product> finalProducts = products.map((product) {
         final isFavorite = favoriteProducts.any(
@@ -41,7 +44,13 @@ class HomeCubit extends Cubit<HomeState> {
         return product.copyWith(isFavorite: isFavorite);
       }).toList();
       if (isClosed) return;
-      emit(HomeLoaded(carouselItems: carouselItems, products: finalProducts));
+      emit(
+        HomeLoaded(
+          carouselItems: carouselItems,
+          products: finalProducts,
+          categories: categories,
+        ),
+      );
     } catch (e) {
       if (isClosed) return;
       emit(HomeError(e.toString()));
